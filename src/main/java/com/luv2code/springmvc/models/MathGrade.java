@@ -21,6 +21,12 @@ public class MathGrade implements Grade {
         this.grade = grade;
     }
 
+    public MathGrade(int id, int studentId, double grade) {
+        this.id = id;
+        this.studentId = studentId;
+        this.grade = grade;
+    }
+
     public int getId() {
         return id;
     }

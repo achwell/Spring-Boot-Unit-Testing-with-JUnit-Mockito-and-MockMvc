@@ -21,6 +21,12 @@ public class HistoryGrade implements Grade {
         this.grade = grade;
     }
 
+    public HistoryGrade(int id, int studentId, double grade) {
+        this.id = id;
+        this.studentId = studentId;
+        this.grade = grade;
+    }
+
     public int getId() {
         return id;
     }
