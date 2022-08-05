@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.luv2code</groupId>
-    <artifactId>spring-boot-unit-testing-demo</artifactId>
+    <artifactId>spring-boot-mvc-testing-demo</artifactId>
     <version>1.0.0</version>
     <packaging>war</packaging>
 

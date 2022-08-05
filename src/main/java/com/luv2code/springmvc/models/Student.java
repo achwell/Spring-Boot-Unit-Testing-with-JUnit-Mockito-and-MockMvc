@@ -1,8 +1,9 @@
-package com.luv2code.component.models;
+package com.luv2code.springmvc.models;
 
 public interface Student {
 
     String studentInformation();
 
     String getFullName();
+
 }
