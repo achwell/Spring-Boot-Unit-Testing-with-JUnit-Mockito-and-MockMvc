@@ -8,11 +8,13 @@ import com.luv2code.springmvc.repository.StudentDao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 @Transactional
@@ -25,23 +27,11 @@ public class StudentAndGradeService {
 
     private final HistoryGradeDao historyGradeDao;
 
-    private final MathGrade mathGrade;
-
-    private final ScienceGrade scienceGrade;
-
-    private final HistoryGrade historyGrade;
-
-    private final StudentGrades studentGrades;
-
-    public StudentAndGradeService(StudentDao studentDao, MathGradeDao mathGradeDao, ScienceGradeDao scienceGradeDao, HistoryGradeDao historyGradeDao, MathGrade mathGrade, ScienceGrade scienceGrade, HistoryGrade historyGrade, StudentGrades studentGrades) {
+    public StudentAndGradeService(StudentDao studentDao, MathGradeDao mathGradeDao, ScienceGradeDao scienceGradeDao, HistoryGradeDao historyGradeDao) {
         this.studentDao = studentDao;
         this.mathGradeDao = mathGradeDao;
         this.scienceGradeDao = scienceGradeDao;
         this.historyGradeDao = historyGradeDao;
-        this.mathGrade = mathGrade;
-        this.scienceGrade = scienceGrade;
-        this.historyGrade = historyGrade;
-        this.studentGrades = studentGrades;
     }
 
     public void createStudent(String firstname, String lastname, String emailAddress) {
@@ -74,13 +64,13 @@ public class StudentAndGradeService {
         if (grade >= 0 && grade <= 100) {
             switch (gradeType) {
                 case "math" -> {
-                    return updateGrade(mathGrade, grade, studentId, mathGradeDao);
+                    return updateGrade(new MathGrade(), grade, studentId, mathGradeDao);
                 }
                 case "history" -> {
-                    return updateGrade(historyGrade, grade, studentId, historyGradeDao);
+                    return updateGrade(new HistoryGrade(), grade, studentId, historyGradeDao);
                 }
                 case "science" -> {
-                    return updateGrade(scienceGrade, grade, studentId, scienceGradeDao);
+                    return updateGrade(new ScienceGrade(), grade, studentId, scienceGradeDao);
                 }
                 default -> {
                     return false;
@@ -114,6 +104,7 @@ public class StudentAndGradeService {
         List<Grade> mathGradesList = getGrades(mathGradeDao.findGradeByStudentId(studentId));
         List<Grade> scienceGradesList = getGrades(scienceGradeDao.findGradeByStudentId(studentId));
         List<Grade> historyGradesList = getGrades(historyGradeDao.findGradeByStudentId(studentId));
+        StudentGrades studentGrades = new StudentGrades();
         studentGrades.setMathGradeResults(mathGradesList);
         studentGrades.setScienceGradeResults(scienceGradesList);
         studentGrades.setHistoryGradeResults(historyGradesList);
@@ -127,6 +118,25 @@ public class StudentAndGradeService {
         );
     }
 
+    public void configureStudentInformationModel(int studentId, Model m) {
+        GradebookCollegeStudent studentEntity = studentInformation(studentId);
+        StudentGrades studentGrades = studentEntity.getStudentGrades();
+        m.addAttribute("student", studentEntity);
+        addAverageValues(m, studentGrades.getMathGradeResults(), "mathAverage", studentGrades::findGradePointAverage);
+        addAverageValues(m, studentGrades.getScienceGradeResults(), "scienceAverage", studentGrades::findGradePointAverage);
+        addAverageValues(m, studentGrades.getHistoryGradeResults(), "historyAverage", studentGrades::findGradePointAverage);
+    }
+
+
+    private static void addAverageValues(Model m, List<Grade> gradeResults, String attributeName, Function<List<Grade>, Double> fn) {
+        if(gradeResults.size() > 0) {
+            m.addAttribute(attributeName, fn.apply(gradeResults));
+        } else {
+            m.addAttribute(attributeName, "N/A");
+        }
+    }
+
+
     private static <T extends Grade> List<Grade> getGrades(Iterable<T> grades) {
         List<Grade> gradesList = new ArrayList<>();
         grades.forEach(gradesList::add);
@@ -134,6 +144,7 @@ public class StudentAndGradeService {
     }
 
     private static <T extends Grade> boolean updateGrade(T grade, double gradeValue, int studentId, JpaRepository<T, Integer> repository) {
+        grade.setId(0);
         grade.setGrade(gradeValue);
         grade.setStudentId(studentId);
         repository.save(grade);

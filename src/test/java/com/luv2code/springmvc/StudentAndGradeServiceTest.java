@@ -6,12 +6,11 @@ import com.luv2code.springmvc.repository.MathGradeDao;
 import com.luv2code.springmvc.repository.ScienceGradeDao;
 import com.luv2code.springmvc.repository.StudentDao;
 import com.luv2code.springmvc.service.StudentAndGradeService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -21,9 +20,11 @@ import java.util.Optional;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD;
 
 @SpringBootTest
-@TestPropertySource("/application.properties")
+@DirtiesContext(classMode = BEFORE_EACH_TEST_METHOD)
+@TestPropertySource("/application-test.properties")
 public class StudentAndGradeServiceTest {
 
     @Autowired
@@ -41,24 +42,12 @@ public class StudentAndGradeServiceTest {
     @Autowired
     private HistoryGradeDao historyGradeDao;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
     @BeforeEach
     public void setupDatabase() {
         studentDao.save(new CollegeStudent("Eric", "Roby", "eric_roby@luv2code_school.com"));
         mathGradeDao.save(new MathGrade(1, 1, 100.00));
         scienceGradeDao.save(new ScienceGrade(1, 1, 100.00));
         historyGradeDao.save(new HistoryGrade(1, 1, 100.00));
-    }
-
-    @AfterEach
-    public void clearDatabase() {
-        jdbcTemplate.execute("TRUNCATE TABLE student RESTART IDENTITY");
-        jdbcTemplate.execute("TRUNCATE TABLE history_grade RESTART IDENTITY");
-        jdbcTemplate.execute("TRUNCATE TABLE math_grade RESTART IDENTITY");
-        jdbcTemplate.execute("TRUNCATE TABLE science_grade RESTART IDENTITY");
-        jdbcTemplate.execute("commit;");
     }
 
     @Test
